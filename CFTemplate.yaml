@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium    
+    Description: Enter t2.micro, t2.small, or t2.medium. Default is t2.micro.
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be the name of an existing EC2 key pair.
+    Description: Name of an exisiting EC2 key pair to enable access to the instance.
+Mappings: 
+  RegionMap: 
+    us-east-1: 
+      "64": "ami-7a11e213"
+    us-west-1: 
+      "64": "ami-cfc7978a"
+    eu-west-1: 
+      "64": "ami-466768ac"
+    ap-southeast-1: 
+      "64": "ami-60f28c32"
+    ap-northeast-1: 
+      "64": "ami-a003a8a1"
+    eu-central-1:
+      "64": "ami-7c4f7097"
+Resources: 
+  myEC2Instance: 
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", 64]
+      InstanceType: !Ref InstanceTypeParameter
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref WebServerSecurityGroup
+
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access via ssh as well as HTTP traffic
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          CidrIp: 217.162.218.44/32
+          FromPort: "22"
+          ToPort: "22"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "80"
+          ToPort: "80"
+
+Outputs:
+  PublicIP:
+    Value: !GetAtt [myEC2Instance, "PublicIp"]
+
+
+
